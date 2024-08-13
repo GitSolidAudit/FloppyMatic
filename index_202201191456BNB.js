@@ -1,5 +1,5 @@
 
-var CONTRACT_ADDRESS = "0xB632364817C0aC655e8F6Fb4Dd392105b9a09E5b";
+var CONTRACT_ADDRESS = "0x41ab90e3d1b1655c8f555a6c93309b3aa95e4ced";
 var referrer = '0x823Ff39DD0B3255598872d138F1f7e45771d1202';
 var upline = '0x823Ff39DD0B3255598872d138F1f7e45771d1202';
 
@@ -836,7 +836,7 @@ async function checkForBinanceChain() {
 
 async function runAPP() {
   let networkID = await web3.eth.net.getId()
-  if (networkID == 97) { // 56 - BSC Live. 97 -- BSC Test
+  if (networkID == 56) { // 56 - BSC Live. 97 -- BSC Test
     contract = await new web3.eth.Contract(ABI, CONTRACT_ADDRESS)
     console.log(contract)
   }
