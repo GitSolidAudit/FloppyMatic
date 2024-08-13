@@ -740,21 +740,28 @@ window.addEventListener('load', Connect)
 
 async function Connect() {
   if (window.ethereum) {
-      // Use MetaMask's provider
-      window.web3 = new Web3(window.ethereum);
-      try {
-          // Request account access
-          await window.ethereum.request({ method: 'eth_requestAccounts' });
-          const accounts = await web3.eth.getAccounts();
-          const currentAddr = accounts[0];
-          console.log("Connected address:", currentAddr);
-          runAPP();
-      } catch (error) {
-          console.error("Error connecting to MetaMask:", error);
-      }
-  } else {
-      console.error('MetaMask not detected');
+    window.web3 = new Web3(ethereum)
+    try {
+      await ethereum.enable()
+
+      let accounts = await web3.eth.getAccounts()
+      currentAddr = accounts[0]
+      console.log(currentAddr)
+      runAPP()
+      return
+    } catch (error) {
+      console.error(error)
+    }
+  } else if (window.web3) {
+    window.web3 = new Web3(web3.currentProvider)
+
+    let accounts = await web3.eth.getAccounts()
+    currentAddr = accounts[0]
+    console.log(currentAddr)
+    runAPP()
+    return
   }
+  setTimeout(checkForBinanceChain, 1500)
 }
 async function runAPP() {
   let networkID = await web3.eth.net.getId()
