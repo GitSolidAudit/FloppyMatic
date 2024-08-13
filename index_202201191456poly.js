@@ -740,461 +740,451 @@ window.addEventListener('load', Connect)
 
 async function Connect() {
   if (window.ethereum) {
-      window.web3 = new Web3(ethereum)
+      // Use MetaMask's provider
+      window.web3 = new Web3(window.ethereum);
       try {
-          await ethereum.enable()
-
-          let accounts = await web3.eth.getAccounts()
-          currentAddr = accounts[0]
-    	console.log(currentAddr)
-          runAPP()
-          return
+          // Request account access
+          await window.ethereum.request({ method: 'eth_requestAccounts' });
+          const accounts = await web3.eth.getAccounts();
+          const currentAddr = accounts[0];
+          console.log("Connected address:", currentAddr);
+          runAPP();
       } catch (error) {
-          console.error(error)
+          console.error("Error connecting to MetaMask:", error);
       }
-  } else if (window.web3) {
-      window.web3 = new Web3(web3.currentProvider)
-
-      let accounts = await web3.eth.getAccounts()
-      currentAddr = accounts[0]
-      console.log(currentAddr)
-      runAPP()
-      return
+  } else {
+      console.error('MetaMask not detected');
   }
-  setTimeout(checkForBinanceChain, 1500)
 }
-async function checkForBinanceChain() {
-    try {
-        await window.BinanceChain.enable()
-        console.log(typeof(window.BinanceChain))
-        if (window.BinanceChain) {
-            console.log('BinanceChain')
-            await BinanceChain.enable()
-            window.web3 = new Web3(window.BinanceChain)
-            let accounts = await web3.eth.getAccounts()
-            currentAddr = accounts[0]
-            
-            console.log(contract)
-            runAPP()
-            return
-        }
-    } catch (e) {}
-}  
-
-async function runAPP(){
-    let networkID = await web3.eth.net.getId()
-    if (networkID == 137) { // 56 - BSC Live. 97 -- BSC Test
-		contract = await new web3.eth.Contract(ABI, CONTRACT_ADDRESS)
-		console.log(contract)
-    } 
+async function runAPP() {
+  let networkID = await web3.eth.net.getId()
+  if (networkID == 137) { // 56 - BSC Live. 97 -- BSC Test
+    contract = await new web3.eth.Contract(ABI, CONTRACT_ADDRESS)
+    console.log(contract)
+  }
 }
 
-    setInterval(() => {				
-        if(contract){
-            contract.methods.getContractLaunchTime().call().then(res=>{                		
-				var t = parseInt(res) + 60				
-				startD = parseInt(t / 60 / 60 / 24)
-				
-                t = t - startD * 60 * 60 * 24
-				startH = parseInt(t / 60 / 60)	
-				
-                t = t - startH * 60 * 60
-				startM = parseInt(t / 60)	
-				
-				t = t - startM * 60
-				startS = parseInt(t)
-				
-                //launchTime(res,(body)=>{
-                //   $("#launch-time").html(body)                    
-                //}); 				
-            })
-			
-            contract.methods.getTimeToNextDay().call().then(res=>{                		
-				var t = parseInt(res) + 60				
-				startD = parseInt(t / 60 / 60 / 24)
-				
-                t = t - startD * 60 * 60 * 24
-				startH = parseInt(t / 60 / 60)	
-				
-                t = t - startH * 60 * 60
-				startM = parseInt(t / 60)	
-				
-				t = t - startM * 60
-				startS = parseInt(t)				
-			
-				$("#time-tonextday").html(`${startD}D : ${startH}H : ${startM}M`)	
-            })	
-			
-            contract.methods.getUserTimeToUnstake(currentAddr).call().then(res=>{                		
-				var t = parseInt(res) + 60				
-				startD = parseInt(t / 60 / 60 / 24)
-				
-                t = t - startD * 60 * 60 * 24
-				startH = parseInt(t / 60 / 60)	
-				
-                t = t - startH * 60 * 60
-				startM = parseInt(t / 60)	
-				
-				t = t - startM * 60
-				startS = parseInt(t)
-				
-				if (res == 0) {
-					$("#time-tounstake").html(`Ready to Unstake`)
-				} else {
-					$("#time-tounstake").html(`${startD}D : ${startH}H : ${startM}M`)													   
-				}
-            })	
-			
-        } 
-    }, 3000);
-        
-    setInterval(() => {
-        if(contract){
-            web3.eth.getAccounts().then(res=>{
-                currentAddr = res[0]
-            })
-    
-            var connectedAddr = currentAddr[0] + 
-                                currentAddr[1] + 
-                                currentAddr[2] + 
-                                currentAddr[3] + 
-                                currentAddr[4] + '...' +
-                                currentAddr[currentAddr.length-5] + 
-                                currentAddr[currentAddr.length-4] + 
-                                currentAddr[currentAddr.length-3] + 
-                                currentAddr[currentAddr.length-2] + 
-                                currentAddr[currentAddr.length-1]
 
-            $("#connect-btn").text(connectedAddr)			
-			
-            contract.methods.getTokenPrice().call().then(res=>{ 
-			 	TokenPrice = (res/1e18).toFixed(6)
-			 	$("#token-price").text(`${TokenPrice}`)
-			 	$("#token-priceM").text(`${TokenPrice}`)
-             })	
-			
-            contract.methods.totalSupply().call().then(res=>{
-                $("#total-supply").text((res/1e18).toFixed(2))			
-            })	
-			
-            contract.methods.limitSupply().call().then(res=>{
-                $("#limit-supply").text((res/1e18).toFixed(2))			
-            })	
-			
-            contract.methods.availableSupply().call().then(res=>{
-                $("#available-supply").text((res/1e18).toFixed(2))			
-            })	
-			
-            contract.methods.totalUsers().call().then(res=>{
-                $("#total-users").text(res)			
-            })	
-			
-            contract.methods.getAPY_M().call().then(res=>{                	
-				$("#APY_M").text(`${res}%`)
-            })	
-			
-            contract.methods.getAPY_T().call().then(res=>{                	
-				$("#APY_T").text(`${res}%`)
-            })				
-			
-            contract.methods.totalMaticStaked().call().then(res=>{                	
-				$("#total-BUSD-staked").text(`${(res/1e18).toFixed(2)}`)
-            })	
+// Update the times every 3 seconds
+setInterval(updateStakeEndTime, 3000);
 
-            contract.methods.totalUsers().call().then(res=>{                	
-				$("#totalUsers").text(`${(res)}`)
-            })				
-			
-            contract.methods.totalTokenStaked().call().then(res=>{                	
-				$("#total-token-staked").text(`${(res/1e18).toFixed(2)}`)
-            })	
-			
-		
-			// todo, change hardcoded address for variable
-			//tokenContract.methods.balanceOf('0xab08906867fcA09e9E39819411Df1355C918Da05').call().then(res => {
-			contract.methods.balanceOf(CONTRACT_ADDRESS).call().then(res => {	
-				$("#contract-BUSD-balance").text((res/1e18).toFixed(2))
-            })
+setInterval(() => {
+  if (contract) {
+    contract.methods.getContractLaunchTime().call().then(res => {
+      var t = BigInt(res) + 60n;
+      startD = parseInt(t / 60 / 60 / 24)
 
-			contract.methods.getUserMaticBalance(currentAddr).call().then(res => {
-				$("#user-BUSD-balance-1").text((res/1e18).toFixed(4))	
+      t = t - startD * 60 * 60 * 24
+      startH = parseInt(t / 60 / 60)
 
-			})
+      t = t - startH * 60 * 60
+      startM = parseInt(t / 60)
 
-            //contract.methods.getUserBUSDBalance(currentAddr).call().then(res=>{
-            //    $("#user-BUSD-balance-1").text((res/1e18).toFixed(6))			
-            //})			
-			
-            contract.methods.getContractTokenBalance().call().then(res=>{
-                $("#contract-token-balance").text((res/1e18).toFixed(2))
-            })
-			
-            contract.methods.getUserTokenBalance(currentAddr).call().then(res=>{
-                $("#user-token-balance-1").text((res/1e18).toFixed(4))	
-				$("#user-token-balance-2").text((res/1e18).toFixed(4))
-            })
-			
-            contract.methods.getUserMaticStaked(currentAddr).call().then(res=>{	
-				    userMaticStaked = (res/1e18).toFixed(2)
-				// console.log(userBUSDStaked)
-				$("#user-BUSD-staked").text((res/1e18).toFixed(4))
-            })
-							
-			
-            contract.methods.getUserTokenStaked(currentAddr).call().then(res=>{                	
-				$("#user-token-staked").text((res/1e18).toFixed(4))
-            })				
-			
-            contract.methods.getUserUnclaimedTokens_M(currentAddr).call().then(res=>{
-                $("#user-unClaimed-M").text((res/1e18).toFixed(4))			
-            })				
-			
-            contract.methods.getUserUnclaimedTokens_T(currentAddr).call().then(res=>{
-                $("#user-unClaimed-T").text((res/1e18).toFixed(4))			
-            })
-			
-			contract.methods.getTokenSoldToday().call().then(res=>{                	
-				$("#total-sold-today").text((res/1e18).toFixed(2))
-            })
-			
-			// put this back in as it was removed from the contract
-            //contract.methods.getTokenAvailableToSell().call().then(res=>{                	
-			//	$("#available-to-sell").html(`Available Today<span>${(res/1e18).toFixed(2)}</span>`)
-            //})		
+      t = t - startM * 60
+      startS = parseInt(t)
 
-            $("#ref-link").val('https://' + window.location.host  + '/POLY/?ref=' + currentAddr)
+      //launchTime(res,(body)=>{
+      //   $("#launch-time").html(body)                    
+      //}); 				
+    })
 
-            contract.methods.getUserReferralBonus(currentAddr).call().then(res=>{
-                $("#referral-available").text((res/1e18).toFixed(2))
-            })           
-			
-			contract.methods.getUserReferralTotalBonus(currentAddr).call().then(res=>{
-                $("#referral-earned").text((res/1e18).toFixed(2))
-            })
+    contract.methods.getTimeToNextDay().call().then(res => {
+      var t = parseInt(res) + 60
+      startD = parseInt(t / 60 / 60 / 24)
 
-            contract.methods.getUserReferralWithdrawn(currentAddr).call().then(res=>{
-                $("#referral-withdrawn").text((res/1e18).toFixed(2))
-            })
+      t = t - startD * 60 * 60 * 24
+      startH = parseInt(t / 60 / 60)
 
-            contract.methods.getUserDownlineCount(currentAddr).call().then(res=>{                
-                var sum = parseInt(res[0]) + parseInt(res[1]) + parseInt(res[2])                
-                $("#total-referrals").text(sum.toFixed(0))
-            }) 
-      
-        }	
-        
-    }, 3000);
+      t = t - startH * 60 * 60
+      startM = parseInt(t / 60)
+
+      t = t - startM * 60
+      startS = parseInt(t)
+
+      $("#time-tonextday").html(`${startD}D : ${startH}H : ${startM}M`)
+    })
+
+    contract.methods.getUserTimeToUnstake(currentAddr).call().then(res => {
+      var t = parseInt(res) + 60
+      startD = parseInt(t / 60 / 60 / 24)
+
+      t = t - startD * 60 * 60 * 24
+      startH = parseInt(t / 60 / 60)
+
+      t = t - startH * 60 * 60
+      startM = parseInt(t / 60)
+
+      t = t - startM * 60
+      startS = parseInt(t)
+
+      if (res == 0) {
+        $("#time-tounstake").html(`Ready to Unstake`)
+      } else {
+        $("#time-tounstake").html(`${startD}D : ${startH}H : ${startM}M`)
+      }
+    })
+
+  }
+}, 3000);
+
+function bigIntToNumber(bigInt) {
+  return Number(bigInt) / 1e18;
+}
+
+setInterval(() => {
+  if (contract) {
+    web3.eth.getAccounts().then(res => {
+      currentAddr = res[0]
+    })
+
+    var connectedAddr = currentAddr[0] +
+      currentAddr[1] +
+      currentAddr[2] +
+      currentAddr[3] +
+      currentAddr[4] + '...' +
+      currentAddr[currentAddr.length - 5] +
+      currentAddr[currentAddr.length - 4] +
+      currentAddr[currentAddr.length - 3] +
+      currentAddr[currentAddr.length - 2] +
+      currentAddr[currentAddr.length - 1]
+
+    $("#connect-btn").text(connectedAddr)
+
+    // Helper function to convert BigInt to Number
+function bigIntToNumber(bigInt) {
+  return Number(bigInt) / 1e18;
+}
+
+// Get token price
+contract.methods.getTokenPrice().call().then(res => {
+  TokenPrice = bigIntToNumber(res).toFixed(8);
+  $("#token-price").text(TokenPrice);
+  $("#token-priceM").text(TokenPrice);
+});
+
+// Get total supply
+contract.methods.totalSupply().call().then(res => {
+  $("#total-supply").text(bigIntToNumber(res).toFixed(2));
+});
+
+// Get limit supply
+contract.methods.limitSupply().call().then(res => {
+  $("#limit-supply").text(bigIntToNumber(res).toFixed(2));
+});
+
+// Get available supply
+contract.methods.availableSupply().call().then(res => {
+  $("#available-supply").text(bigIntToNumber(res).toFixed(2));
+});
+
+// Get total users
+contract.methods.totalUsers().call().then(res => {
+  $("#total-users").text(bigIntToNumber(res).toFixed(2));
+});
+
+// Get total BNB staked
+contract.methods.totalMaticStaked().call().then(res => {
+  $("#total-BUSD-staked").text(bigIntToNumber(res).toFixed(2));
+});
+
+// Get total users (again, seems duplicated)
+contract.methods.totalUsers().call().then(res => {
+  $("#totalUsers").text(bigIntToNumber(res).toFixed(2));
+});
+
+// Get total token staked
+contract.methods.totalTokenStaked().call().then(res => {
+  $("#total-token-staked").text(bigIntToNumber(res).toFixed(2));
+});
+
+// Get contract BUSD balance
+contract.methods.balanceOf(CONTRACT_ADDRESS).call().then(res => {
+  $("#contract-BUSD-balance").text(bigIntToNumber(res).toFixed(2));
+});
+
+// Get user BNB balance
+contract.methods.getUserMaticBalance(currentAddr).call().then(res => {
+  $("#user-BUSD-balance-1").text(bigIntToNumber(res).toFixed(2));
+});
+
+// Get contract token balance
+contract.methods.getContractTokenBalance().call().then(res => {
+  $("#contract-token-balance").text(bigIntToNumber(res).toFixed(2));
+});
+
+// Get user token balance
+contract.methods.getUserTokenBalance(currentAddr).call().then(res => {
+  $("#user-token-balance-1").text(bigIntToNumber(res).toFixed(2));
+  $("#user-token-balance-2").text(bigIntToNumber(res).toFixed(2));
+});
+
+// Get user BNB staked
+contract.methods.getUserMaticStaked(currentAddr).call().then(res => {
+  $("#user-BUSD-staked").text(bigIntToNumber(res).toFixed(2));
+});
+
+// Get user token staked
+contract.methods.getUserTokenStaked(currentAddr).call().then(res => {
+  $("#user-token-staked-1").text(bigIntToNumber(res).toFixed(2));
+  $("#user-token-staked-2").text(bigIntToNumber(res).toFixed(2));
+});
+
+// Get user unclaimed tokens (M)
+contract.methods.getUserUnclaimedTokens_M(currentAddr).call().then(res => {
+  $("#user-unClaimed-M").text(bigIntToNumber(res).toFixed(2));
+});
+
+// Get user unclaimed tokens (T)
+contract.methods.getUserUnclaimedTokens_T(currentAddr).call().then(res => {
+  $("#user-unClaimed-T").text(bigIntToNumber(res).toFixed(2));
+});
+
+
+// Get token sold today
+contract.methods.getTokenSoldToday().call().then(res => {
+  $("#total-sold-today").text(bigIntToNumber(res).toFixed(2));
+});
+
+// Get user referral bonus
+contract.methods.getUserReferralBonus(currentAddr).call().then(res => {
+  $("#referral-available").text(bigIntToNumber(res).toFixed(2));
+});
+
+// Get user referral total bonus
+contract.methods.getUserReferralTotalBonus(currentAddr).call().then(res => {
+  $("#referral-earned").text(bigIntToNumber(res).toFixed(2));
+});
+
+// Get user referral withdrawn
+contract.methods.getUserReferralWithdrawn(currentAddr).call().then(res => {
+  $("#referral-withdrawn-1").text(bigIntToNumber(res).toFixed(2));
+  $("#referral-withdrawn-2").text(bigIntToNumber(res).toFixed(2));
+});
+
+// Get user downline count
+contract.methods.getUserDownlineCount(currentAddr).call().then(res => {
+  var sum = res.reduce((acc, num) => acc + Number(num), 0);
+  $("#total-referrals-1").text(sum.toFixed(0));
+  $("#total-referrals-2").text(sum.toFixed(0));
+});
+
+// Convert token value to hex string
+
+
+
+  }
+
+}, 3000);
 
 
 function spendLimit(callback) {
-	tokenContract.methods.allowance(currentAddr,contract).call().then(result => {
-			callback(web3.utils.fromWei(result));
-		}).catch((err) => {
-			console.log(err)
-		});
-	}
-
-function userBalance(callback){
-	tokenContract.methods.balanceOf(currentAddr).call().then(result => {
-				var amt = web3.utils.fromWei(result)
-				// console.log("balance" + amt)
-		callback(amt);
-				usrBal=amt;
-	}).catch((err) => {
-		console.log(err)
-	});
+  tokenContract.methods.allowance(currentAddr, contract).call().then(result => {
+    callback(web3.utils.fromWei(result));
+  }).catch((err) => {
+    console.log(err)
+  });
 }
-	
+
+function userBalance(callback) {
+  tokenContract.methods.balanceOf(currentAddr).call().then(result => {
+    var amt = web3.utils.fromWei(result)
+    // console.log("balance" + amt)
+    callback(amt);
+    usrBal = amt;
+  }).catch((err) => {
+    console.log(err)
+  });
+}
+
 
 function copyToClipboard(element) {
-    var $temp = $("<input>");
-    $("body").append($temp);
-    $temp.val($(element).val()).select();
-    document.execCommand("copy");
-    $temp.remove();
-    showAlert('Successfuly copied','success')
+  var $temp = $("<input>");
+  $("body").append($temp);
+  $temp.val($(element).val()).select();
+  document.execCommand("copy");
+  $temp.remove();
+  showAlert('Successfuly copied', 'success')
 }
 
-function showAlert(msg,type){
-    if(type == 'error'){
-        iziToast.error({
-            title: 'Error',
-            message: msg,
-            backgroundColor: 'white',
-            position: 'topRight',
-            color: '.iziToast-color-red',
-            iconColor: '.iziToast-color-red'
-        });
-    }
+function showAlert(msg, type) {
+  if (type == 'error') {
+    iziToast.error({
+      title: 'Error',
+      message: msg,
+      backgroundColor: 'white',
+      position: 'topRight',
+      color: '.iziToast-color-red',
+      iconColor: '.iziToast-color-red'
+    });
+  }
 
-    if(type == 'success'){
-        iziToast.success({
-            title: 'OK',
-            message: msg,
-            backgroundColor: 'white',
-            position: 'topRight',
-            progressBarColor: '#76BF73',
-            color:'.iziToast-#76BF73',
-            iconColor: '.iziToast-#76BF73'
-        });
-    }
+  if (type == 'success') {
+    iziToast.success({
+      title: 'OK',
+      message: msg,
+      backgroundColor: 'white',
+      position: 'topRight',
+      progressBarColor: '#76BF73',
+      color: '.iziToast-#76BF73',
+      iconColor: '.iziToast-#76BF73'
+    });
+  }
 }
-function toHexString(number){return '0x'+number.toString(16)}
+function toHexString(number) { return '0x' + number.toString(16) }
 
 function SetMaxBUSDMachine() {
-	var inputF = document.getElementById("input-2");
-	contract.methods.getUserTokenBalance(currentAddr).call().then(res=>{
-		
-		amt = web3.utils.fromWei(res);	
-		inputF.value = parseFloat(amt).toFixed(3) - 0.001;
-	})	
+  var inputF = document.getElementById("input-2");
+  contract.methods.getUserTokenBalance(currentAddr).call().then(res => {
+
+    amt = web3.utils.fromWei(res);
+    inputF.value = parseFloat(amt).toFixed(3) - 0.001;
+  })
 }
 
 function SetMaxBUSDMachineToSell() {
-	var inputF = document.getElementById("input-3");
-	contract.methods.getUserTokenBalance(currentAddr).call().then(res=>{
-		
-		amt = web3.utils.fromWei(res);	
-		inputF.value = parseFloat(amt).toFixed(3) - 0.001; 
-	})	
+  var inputF = document.getElementById("input-3");
+  contract.methods.getUserTokenBalance(currentAddr).call().then(res => {
+
+    amt = web3.utils.fromWei(res);
+    inputF.value = parseFloat(amt).toFixed(3) - 0.001;
+  })
 }
 
 
 function stakeM() {
-	var today = new Date();
-	var date = today.getUTCFullYear() + '-' + (today.getUTCMonth() + 1) + '-' + today.getUTCDate();
-	var time = today.getUTCHours() + ":" + today.getUTCMinutes() + ":" + today.getUTCSeconds();
-	var CurrentDateTime = date + ' ' + time;
-	// console.log(CurrentDateTime);
+  var today = new Date();
+  var date = today.getUTCFullYear() + '-' + (today.getUTCMonth() + 1) + '-' + today.getUTCDate();
+  var time = today.getUTCHours() + ":" + today.getUTCMinutes() + ":" + today.getUTCSeconds();
+  var CurrentDateTime = date + ' ' + time;
+  // console.log(CurrentDateTime);
 
-	var busdlaunch = new Date("Sat Dec 18 2021 13:00:00 GMT-0000");
-	var date = busdlaunch.getUTCFullYear() + '-' + (busdlaunch.getUTCMonth() + 1) + '-' + busdlaunch.getUTCDate();
-	var time = busdlaunch.getUTCHours() + ":" + busdlaunch.getUTCMinutes() + ":" + busdlaunch.getUTCSeconds();
-	var BUSDLaunchDateTime = date + ' ' + time;
-	// console.log(BUSDLaunchDateTime);
+  var busdlaunch = new Date("Sat Dec 18 2021 13:00:00 GMT-0000");
+  var date = busdlaunch.getUTCFullYear() + '-' + (busdlaunch.getUTCMonth() + 1) + '-' + busdlaunch.getUTCDate();
+  var time = busdlaunch.getUTCHours() + ":" + busdlaunch.getUTCMinutes() + ":" + busdlaunch.getUTCSeconds();
+  var BUSDLaunchDateTime = date + ' ' + time;
+  // console.log(BUSDLaunchDateTime);
 
   if (CurrentDateTime > BUSDLaunchDateTime) {    // launched
     if (contract) {
-        var trxspenddoc = document.getElementById('input-busd');
-        var amountInWei = web3.utils.toWei(trxspenddoc.value);
-		
-        console.log("stake busd: " + upline, amountInWei);
-        contract.methods.stakeMatic(upline) // Pass only one parameter
-            .send({
-                value: amountInWei, // assuming amountInWei is the value being sent
-                from: currentAddr,
-                gasPrice: gasPrice,
-            });
+      var trxspenddoc = document.getElementById('input-busd');
+      var amountInWei = web3.utils.toWei(trxspenddoc.value);
+
+      console.log("stake busd: " + upline, amountInWei);
+      contract.methods.stakeMatic(upline) // Pass only one parameter
+        .send({
+          value: amountInWei, // assuming amountInWei is the value being sent
+          from: currentAddr,
+          gasPrice: gasPrice,
+        });
     }
-} else {
+  } else {
     window.alert("Staking BUSD available from: Sat Dec 18 2021 13:00:00 GMT-0000");
-}
+  }
 }
 
 function stakeT(input) {
-	if (contract) {
-		var amount = toHexString($(input).val() * 1e18)
-		console.log(amount)
-		contract.methods.stakeToken(amount).send({
-			// value: 0,
-			from: currentAddr,
-			gasPrice: gasPrice,
-		})
-	}
+  if (contract) {
+    var amount = toHexString($(input).val() * 1e18)
+    console.log(amount)
+    contract.methods.stakeToken(amount).send({
+      // value: 0,
+      from: currentAddr,
+      gasPrice: gasPrice,
+    })
+  }
 }
 function sell(input) {
-	if (contract) {
-		var amount = toHexString($(input).val() * 1e18)
-		console.log(amount)
-		contract.methods.sellToken(amount).send({
-			// value: 0,
-			from: currentAddr,
-			gasPrice: gasPrice,
-		})
-	}
+  if (contract) {
+    var amount = toHexString($(input).val() * 1e18)
+    console.log(amount)
+    contract.methods.sellToken(amount).send({
+      // value: 0,
+      from: currentAddr,
+      gasPrice: gasPrice,
+    })
+  }
 }
 
 
 var getUrlParameter = function getUrlParameter(sParam) {
   var sPageURL = window.location.search.substring(1),
-      sURLVariables = sPageURL.split('&'),
-      sParameterName,
-      i;
+    sURLVariables = sPageURL.split('&'),
+    sParameterName,
+    i;
 
   for (i = 0; i < sURLVariables.length; i++) {
-      sParameterName = sURLVariables[i].split('=');
+    sParameterName = sURLVariables[i].split('=');
 
-      if (sParameterName[0] === sParam) {
-          return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
-      }
+    if (sParameterName[0] === sParam) {
+      return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+    }
   }
 };
 
 
 var refurl = getUrlParameter('ref');
 
-if(refurl){
+if (refurl) {
   localStorage.setItem('ref', refurl);
 }
 
-upline = localStorage.getItem('ref') ?   localStorage.getItem('ref') : referrer;
+upline = localStorage.getItem('ref') ? localStorage.getItem('ref') : referrer;
 
-$("#unstake").click(()=>{
-  if(contract){
-      contract.methods.unStakeToken().send({
-          value: 0,
-          from: currentAddr,
-          gasPrice: gasPrice,
-      })
+$("#unstake").click(() => {
+  if (contract) {
+    contract.methods.unStakeToken().send({
+      value: 0,
+      from: currentAddr,
+      gasPrice: gasPrice,
+    })
   }
 })
 
-$("#claimM").click(()=>{
-  if(contract){
-      contract.methods.claimToken_M().send({
-          value: 0,
-          from: currentAddr,
-          gasPrice: gasPrice,
-      })
+$("#claimM").click(() => {
+  if (contract) {
+    contract.methods.claimToken_M().send({
+      value: 0,
+      from: currentAddr,
+      gasPrice: gasPrice,
+    })
   }
 })
 
-$("#claimT").click(()=>{
-  if(contract){
-      contract.methods.claimToken_T().send({
-          value: 0,
-          from: currentAddr,
-          gasPrice: gasPrice,
-      })
+$("#claimT").click(() => {
+  if (contract) {
+    contract.methods.claimToken_T().send({
+      value: 0,
+      from: currentAddr,
+      gasPrice: gasPrice,
+    })
   }
 })
 
-$("#claimA").click(()=>{
-  if(contract){
-      contract.methods.claimAirdrop().send({
-          value: 0,
-          from: currentAddr,
-          gasPrice: gasPrice,
-      })
+$("#claimA").click(() => {
+  if (contract) {
+    contract.methods.claimAirdrop().send({
+      value: 0,
+      from: currentAddr,
+      gasPrice: gasPrice,
+    })
   }
 })
 
-$("#withdraw-referral-btn").click(()=>{
-  if(contract){
-      contract.methods.withdrawRef().send({
-          value: 0,
-          from: currentAddr,
-          gasPrice: gasPrice ,
-      })
+$("#withdraw-referral-btn").click(() => {
+  if (contract) {
+    contract.methods.withdrawRef().send({
+      value: 0,
+      from: currentAddr,
+      gasPrice: gasPrice,
+    })
   }
 })
 
-$("#input-3").on('input',()=>{
-    var amount = $("#input-3").val();
-	
-    if(contract){
-        var profit = (amount * TokenPrice)
-		$("#sell-calc").html(`${profit.toFixed(6)} Matic</span>`)
-    }
-})
+$("#input-3").on('input', () => {
+  var amount = $("#input-3").val();
 
+  if (contract) {
+    var profit = (amount * TokenPrice)
+    $("#sell-calc").html(`${profit.toFixed(6)} Matic</span>`)
+  }
+})
