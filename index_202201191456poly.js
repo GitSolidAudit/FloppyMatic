@@ -772,9 +772,6 @@ async function runAPP() {
 }
 
 
-// Update the times every 3 seconds
-setInterval(updateStakeEndTime, 3000);
-
 setInterval(() => {
   if (contract) {
     contract.methods.getContractLaunchTime().call().then(res => {
